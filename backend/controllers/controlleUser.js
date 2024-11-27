@@ -106,12 +106,12 @@ module.exports.getuserInfo = async (req, res) => {
 
 module.exports.logoutUser = (req, res) => {
     // Clear the cookie containing the JWT token
-    res.clearCookie('jwt', {
+    res.cookie('jwt', '', {
         httpOnly: true,
+        expires: new Date(0), // Set to past date
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'None',
-        domain: '.acel-js-projects.vercel.app', // Include subdomains
-        path: 'https://deploy-4f8o-ldoqcakvx-acel-js-projects.vercel.app/', // Match the path
+        path: '/'
     });
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json({ message: 'Logged out successfully' });

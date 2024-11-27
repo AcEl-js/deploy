@@ -66,10 +66,7 @@ if (!uri) {
 console.log(uri);
 
 
-app.get('/logout', (req, res) => {
-  res.cookie('jwt', '',{ httpOnly: true, maxAge: 1 })
-  res.send('hello')
-})
+
 
 
 //post request to create a new user q

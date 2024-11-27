@@ -31,8 +31,10 @@ const app = express()
 //connect to the database
 
 const corsOptions = {
-  origin: 'https://deploy-4f8o.vercel.app', // Replace with your frontend URL
-  credentials: true // Allow credentials (cookies) to be sent
+  origin: 'https://deploy-4f8o-ldoqcakvx-acel-js-projects.vercel.app', // Replace with your frontend URL
+  credentials: true, // Allow credentials (cookies) to be sent
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed methods
+  allowedHeaders: ['Content-Type', 'Authorization'] // Specify allowed headers
 };
 
 

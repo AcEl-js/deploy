@@ -52,7 +52,7 @@ module.exports.createAccount = async (req, res) => {
         const user = await User.create({ name, email, password })
         const token = createToken(user._id,user.name);
 
-        res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge * 1000 });
+        res.cookie('jwt', token, { httpOnly: true,sameSite: 'None', maxAge: maxAge * 1000 });
         res.status(200).json({ user: user._id ,msg:`Welcome  ${name} you register successfully  👋`});
     }
     catch (err) {
@@ -72,7 +72,7 @@ module.exports.login = async (req, res) => {
         res.cookie('jwt', token, { 
             httpOnly: true, 
             secure: process.env.NODE_ENV === 'production',  // Only use secure cookies in production
-            sameSite: 'Strict',  // Helps prevent CSRF attacks
+            sameSite: 'None',  // Helps prevent CSRF attacks
             maxAge: maxAge * 1000
         });
 

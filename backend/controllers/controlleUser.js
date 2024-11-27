@@ -107,12 +107,10 @@ module.exports.getuserInfo = async (req, res) => {
 module.exports.logoutUser = (req, res) => {
     // Clear the cookie containing the JWT token
     res.clearCookie('jwt', {
-        httpOnly: true, 
-        secure: process.env.NODE_ENV === 'production', 
-        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // Adjust based on environment
-        domain: process.env.NODE_ENV === 'production' ? 'https://deploy-4f8o-ldoqcakvx-acel-js-projects.vercel.app' : 'localhost', // Add domain if needed
-        path: '/' // Ensure the cookie is cleared from the root path
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'None'
     });
-
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json({ message: 'Logged out successfully' });
 };

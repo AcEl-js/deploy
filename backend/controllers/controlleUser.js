@@ -52,7 +52,11 @@ module.exports.createAccount = async (req, res) => {
         const user = await User.create({ name, email, password })
         const token = createToken(user._id,user.name);
 
-        res.cookie('jwt', token, { httpOnly: true,sameSite: 'None', maxAge: maxAge * 1000 });
+        res.cookie('jwt', token, {
+             httpOnly: true,
+             sameSite: 'None',
+             secure: process.env.NODE_ENV === 'production',
+             maxAge: maxAge * 1000 });
         res.status(200).json({ user: user._id ,msg:`Welcome  ${name} you register successfully  👋`});
     }
     catch (err) {

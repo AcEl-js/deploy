@@ -105,7 +105,7 @@ module.exports.logoutUser = (req, res) => {
     res.clearCookie('jwt', {
         httpOnly: true, // Ensure the cookie is only accessible by the web server
         secure: process.env.NODE_ENV === 'production', // Set 'secure' to true in production
-        sameSite: 'strict' // Additional protection against CSRF
+        sameSite: 'None' // Additional protection against CSRF
     });
 
     return res.status(200).json({ message: 'Logged out successfully' });

@@ -31,7 +31,7 @@ const app = express()
 //connect to the database
 
 const corsOptions = {
-  origin: 'http://localhost:3000', // Replace with your frontend URL
+  origin: 'https://deploy-4f8o.vercel.app', // Replace with your frontend URL
   credentials: true // Allow credentials (cookies) to be sent
 };
 

@@ -11,7 +11,7 @@ import Link from "next/link"
 import axios from "axios"
 
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://deploy-two-jade.vercel.app";
 
 export default function Component() {
   const [isOpen, setIsOpen] = useState(true)

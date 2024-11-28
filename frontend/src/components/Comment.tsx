@@ -176,8 +176,20 @@ export function Comment({
   const replyInputRef = useRef<HTMLTextAreaElement>(null);
   const commentRef = useRef<HTMLDivElement>(null);
   const [justAddedReply, setJustAddedReply] = useState(false);
+  const [isInitialRender, setIsInitialRender] = useState(true);
 
  
+  useEffect(() => {
+    // After the first render, set isInitialRender to false
+    const timer = setTimeout(() => {
+      setIsInitialRender(true);
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+ 
+console.log(isInitialRender);
 
 // Get color based on the reply's position in the thread
 const lineColor = getReplyColor(replyOrderIndex);
@@ -231,6 +243,7 @@ const isNewComment = () => {
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
     onToggleCollapse(comment.comment_id);
+    setIsInitialRender(false);
   };
 
   const getMostLikedReply = () => {
@@ -248,7 +261,8 @@ const isNewComment = () => {
     const newReplies = comment.replies.filter(reply => isNewComment.call({ timestamp: reply.timestamp }));
     
     // For depth 0, show new replies + most liked reply when collapsed
-    if (comment.depth === 0 && isCollapsed) {
+
+    if (comment.depth === 0 && isCollapsed && isInitialRender) {
       const mostLikedReply = getMostLikedReply();
       return [...newReplies, ...(mostLikedReply && !newReplies.includes(mostLikedReply) ? [mostLikedReply] : [])];
     }
@@ -327,8 +341,8 @@ const isNewComment = () => {
           style={{ 
             bottom: '-8px', 
             borderBottomLeftRadius: '12px',
-            borderBottom: `2px solid ${lineColor}`,
-            borderLeft: `2px solid ${lineColor}`
+            borderBottom: `5px solid ${lineColor}`,
+            borderLeft: `5px solid ${lineColor}`
           }}
         >
           <button 
@@ -352,7 +366,7 @@ const isNewComment = () => {
           </button>
         </div>
         <div 
-          className="absolute left-0 w-[2px] hover:bg-blue-500 cursor-pointer transition-colors"
+          className="absolute left-0 w-[5px] hover:bg-blue-500 cursor-pointer transition-colors"
           style={{ 
             top: '24px', 
             bottom: '0', 

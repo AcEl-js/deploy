@@ -104,14 +104,15 @@ module.exports.getuserInfo = async (req, res) => {
 }
 
 
-res.cookie('jwt', '', {
+module.exports.logoutUser = (req, res) => {
+    // Clear the cookie containing the JWT token
+    res.cookie('jwt', '', {
         httpOnly: true,
         expires: new Date(0), // Set to past date
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'None',
         path: '/'
     });
-
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json({ message: 'Logged out successfully' });
 };

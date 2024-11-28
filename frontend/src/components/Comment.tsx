@@ -366,17 +366,21 @@ const isNewComment = () => {
           </button>
         </div>
         <div 
-          className="absolute left-0 w-[5px] hover:bg-blue-500 cursor-pointer transition-colors"
+          className="absolute left-0 w-[5px] hover:bg-blue-500 cursor-pointer transition-colors group"
           style={{ 
             top: '24px', 
             bottom: '0', 
             borderRadius: '0 0 0 8px',
             backgroundColor: lineColor
           }}
-          onClick={toggleCollapse}
-        />
-      </div>
-    )}
+        >
+          <div 
+            className="absolute left-[-10px] right-[-10px] top-0 bottom-0" 
+            onClick={toggleCollapse}
+          />
+        </div>
+        </div>
+      )}
       <div className="py-2">
         <div className="flex items-start space-x-2">
           <div className="flex-shrink-0">

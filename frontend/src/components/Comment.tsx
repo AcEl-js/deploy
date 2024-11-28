@@ -397,7 +397,7 @@ const isNewComment = () => {
             </div>
 
             <div className={`mt-1 ${comment.isSpoiler && !showSpoiler ? 'blur-md' : ''}`}>
-              <div className="text-gray-300 text-sm">{comment.comment_text}</div>
+             <div className={`text-gray-300 text-sm ${comment.isSpoiler && !showSpoiler ? ' cursor-pointer' : ''}`}  onClick={() => setShowSpoiler(true)}>{comment.comment_text}</div>
               {comment.attachments.length > 0 && (
                 <div className="mt-2 space-y-2">
                   {comment.attachments.map((attachment, index) => (

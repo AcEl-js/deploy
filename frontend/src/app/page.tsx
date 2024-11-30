@@ -6,7 +6,7 @@ import { CommentInput } from '../components/CommentInput';
 import type { Comment as CommentType } from '../types';
 import axios from 'axios';
 import { Button } from "@/components/ui/button";
-import { ChevronDown,ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Check } from "lucide-react";
 import Link from 'next/link';
 
 import {
@@ -18,6 +18,7 @@ import {
 
 
 const API_BASE_URL =  "https://deploy-two-jade.vercel.app";
+
 async function handleCheckAuth(router: any): Promise<{ isAuthenticated: boolean; username: string | null,userId:string|null }> {
   try {
     const response = await axios.get(`${API_BASE_URL}/check-auth`, { withCredentials: true });
@@ -111,7 +112,16 @@ export default function Home() {
   const [authenticated, setAuthenticated] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [sortType, setSortType] = useState<string>('newest');
   const router = useRouter();
+
+
+
+  const countTotalComments = (commentList: CommentType[]): number => {
+    return commentList.reduce((total, comment) => {
+      return total + 1 + countTotalComments(comment.replies);
+    }, 0);
+  };
   
 
   // Helper function to build a tree
@@ -258,9 +268,9 @@ export default function Home() {
   };
 
   const handleToggleCollapse = (id: string) => {
-    console.log('Toggle collapse for comment:', id);
+    
   };
-  const [sortType, setSortType] = useState<string>('default');
+  
   const sortedCommentsRef = useRef<CommentType[] | null>(null);
   const handleSortChange = (newSortType: string) => {
     if (comments) {
@@ -313,33 +323,50 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
-      <div className="max-w-3xl mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-4">
-            <h2 className="text-lg font-semibold">Episode 1</h2>
-            <div className="flex items-center gap-2 text-sm text-slate-400">
-              <span className="sr-only">Comments:</span>
-              <span>{comments?.length} Comments</span>
-            </div>
+    <div className="max-w-3xl mx-auto py-8 px-4">
+    <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-4">
+          <h2 className="text-lg font-semibold">Episode 1</h2>
+          <div className="flex items-center gap-2 text-sm text-slate-400">
+            <span className="sr-only">Comments:</span>
+            <span>{countTotalComments(comments)} Comments</span>
           </div>
-          <DropdownMenu >
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="text-slate-400">
-                Sort by
-                <div className=' flex flex-col'>
-                <ChevronUp className="ml-2 h-4 w-4" />
-                <ChevronDown className="ml-2 h-4 w-4" />
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className='bg-white rounded-xl p-0 w-[140px] flex flex-col justify-center' align="end">
-              <DropdownMenuItem className=' cursor-pointer hover:bg-slate-200 pt-2' onClick={() => handleSortChange('newest')}>Newest</DropdownMenuItem>
-              <DropdownMenuItem className=' cursor-pointer hover:bg-slate-200' onClick={() => handleSortChange('oldest')}>Oldest</DropdownMenuItem>
-              <DropdownMenuItem className=' cursor-pointer hover:bg-slate-200 pb-2' onClick={() => handleSortChange('mostLiked')}>Most Liked</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
-        <div className=' my-4 p-3'>
+        <DropdownMenu >
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="text-slate-400">
+              Sort by
+              <div className='flex flex-col'>
+              <ChevronUp className="ml-2 h-4 w-4" />
+              <ChevronDown className="ml-2 h-4 w-4" />
+              </div>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className='bg-white rounded-xl p-0 w-[140px] flex flex-col justify-center' align="end">
+            <DropdownMenuItem 
+              className={`cursor-pointer hover:bg-slate-200 pt-2 flex justify-between items-center ${sortType === 'newest' ? 'bg-slate-100' : ''}`} 
+              onClick={() => handleSortChange('newest')}
+            >
+              Newest
+              {sortType === 'newest' && <Check className="h-4 w-4 text-green-500" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              className={`cursor-pointer hover:bg-slate-200 flex justify-between items-center ${sortType === 'oldest' ? 'bg-slate-100' : ''}`} 
+              onClick={() => handleSortChange('oldest')}
+            >
+              Oldest
+              {sortType === 'oldest' && <Check className="h-4 w-4 text-green-500" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              className={`cursor-pointer hover:bg-slate-200 pb-2 flex justify-between items-center ${sortType === 'mostLiked' ? 'bg-slate-100' : ''}`} 
+              onClick={() => handleSortChange('mostLiked')}
+            >
+              Most Liked
+              {sortType === 'mostLiked' && <Check className="h-4 w-4 text-green-500" />}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>    <div className=' my-4 p-3'>
         {!authenticated ?
               <p className="text-sm text-slate-400">
                 You must be{" "}

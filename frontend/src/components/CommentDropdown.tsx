@@ -35,7 +35,7 @@ export function CommentDropdown({ onReport }: DropdownProps) {
       </button>
       
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-48 bg-white rounded-[9px] shadow-lg z-50 border border-gray-200 ">
+        <div className="absolute lg:left-0 md:left-0 sm:left-0 right-[10px] mt-2 w-48 bg-white rounded-[9px] shadow-lg z-50 border border-gray-200  ">
           <div className="py-1">
             {reportOptions.map((option) => (
               <button

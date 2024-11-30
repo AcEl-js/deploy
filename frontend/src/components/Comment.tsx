@@ -140,6 +140,7 @@ const timeAgoFromNow = (timestamp: string) => {
 
 // Types
 interface CommentType {
+  reactions: any;
   comment_id: string;
   username: string;
   timestamp: string;
@@ -155,6 +156,7 @@ interface CommentType {
 
 interface CommentProps {
   comment: CommentType;
+  currentUserId: string | null; 
   onLike: (id: string) => void;
   onDislike: (id: string) => void;
   onReply: (parentId: string, content: string, isSpoiler: boolean) => void;
@@ -163,12 +165,25 @@ interface CommentProps {
 
 export function Comment({ 
   comment, 
+  currentUserId,
   onLike, 
   onDislike, 
   onReply, 
   onToggleCollapse, 
   replyOrderIndex = 0 
 }: CommentProps & { replyOrderIndex?: number }) {
+  const getUserInitialLikeStatus = () => {
+    const userReaction = comment.reactions.find(
+      (      reaction: { user_id: string | null; }) => reaction.user_id === currentUserId
+    );
+    
+    
+
+    if (!userReaction) return 'neutral';
+    return userReaction.type === 'like' ? 'liked' : 'disliked';
+  };
+
+
   const [isReplying, setIsReplying] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [showSpoiler, setShowSpoiler] = useState(false);
@@ -178,7 +193,64 @@ export function Comment({
   const [justAddedReply, setJustAddedReply] = useState(false);
   const [isInitialRender, setIsInitialRender] = useState(true);
 
- 
+  const [optimisticLikes, setOptimisticLikes] = useState(comment.likes);
+  const [optimisticDislikes, setOptimisticDislikes] = useState(comment.dislikes);
+  const [likeStatus, setLikeStatus] = useState<'neutral' | 'liked' | 'disliked'>(
+    getUserInitialLikeStatus()
+  );
+
+  const handleOptimisticLike = async () => {
+    switch (likeStatus) {
+      case 'neutral':
+        // If neutral, add like
+        setOptimisticLikes(prev => prev + 1);
+        setLikeStatus('liked');
+        await onLike(comment.comment_id);
+        break;
+      
+      case 'liked':
+        // If already liked, neutralize
+        setOptimisticLikes(prev => Math.max(0, prev - 1));
+        setLikeStatus('neutral');
+        await onLike(comment.comment_id);
+        break;
+      
+      case 'disliked':
+        // If previously disliked, reduce dislikes and add like
+        setOptimisticDislikes(prev => Math.max(0, prev - 1));
+        setOptimisticLikes(prev => prev + 1);
+        setLikeStatus('liked');
+        await onLike(comment.comment_id);
+        break;
+    }
+  };
+
+  const handleOptimisticDislike = async () => {
+    switch (likeStatus) {
+      case 'neutral':
+        // If neutral, add dislike
+        setOptimisticDislikes(prev => prev + 1);
+        setLikeStatus('disliked');
+        await onDislike(comment.comment_id);
+        break;
+      
+      case 'disliked':
+        // If already disliked, neutralize
+        setOptimisticDislikes(prev => Math.max(0, prev - 1));
+        setLikeStatus('neutral');
+        await onDislike(comment.comment_id);
+        break;
+      
+      case 'liked':
+        // If previously liked, reduce likes and add dislike
+        setOptimisticLikes(prev => Math.max(0, prev - 1));
+        setOptimisticDislikes(prev => prev + 1);
+        setLikeStatus('disliked');
+        await onDislike(comment.comment_id);
+        break;
+    }
+  };
+  
   useEffect(() => {
     // After the first render, set isInitialRender to false
     const timer = setTimeout(() => {
@@ -189,7 +261,7 @@ export function Comment({
   }, []);
 
  
-console.log(isInitialRender);
+
 
 // Get color based on the reply's position in the thread
 const lineColor = getReplyColor(replyOrderIndex);
@@ -397,7 +469,7 @@ const isNewComment = () => {
             </div>
 
             <div className={`mt-1 ${comment.isSpoiler && !showSpoiler ? 'blur-md' : ''}`}>
-             <div className={`text-gray-300 text-sm ${comment.isSpoiler && !showSpoiler ? ' cursor-pointer' : ''}`}  onClick={() => setShowSpoiler(true)}>{comment.comment_text}</div>
+              <div className={`text-gray-300 text-sm ${comment.isSpoiler && !showSpoiler ? ' cursor-pointer' : ''}`}  onClick={() => setShowSpoiler(true)}>{comment.comment_text}</div>
               {comment.attachments.length > 0 && (
                 <div className="mt-2 space-y-2">
                   {comment.attachments.map((attachment, index) => (
@@ -419,34 +491,42 @@ const isNewComment = () => {
               </button>
             )}
 
-            <div className="flex items-center space-x-4 my-2 mb-2 ">
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={() => setIsReplying(!isReplying)}
-                  className="flex items-center space-x-1 text-gray-400 hover:text-gray-200"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  <span className="text-sm">Reply</span>
-                </button>
+<div className="flex items-center space-x-4 my-2 mb-2 ">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setIsReplying(!isReplying)}
+            className="flex items-center space-x-1 text-gray-400 hover:text-gray-200"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span className="text-sm">Reply</span>
+          </button>
 
-                <button
-                  onClick={() => onLike(comment.comment_id)}
-                  className="flex items-center space-x-1 text-gray-400 hover:text-blue-400"
-                >
-                  <ThumbsUp className="w-4 h-4" />
-                  <span className="text-sm">{comment.likes}</span>
-                </button>
-                <button
-                  onClick={() => onDislike(comment.comment_id)}
-                  className="flex items-center space-x-1 text-gray-400 hover:text-red-400"
-                >
-                  <ThumbsDown className="w-4 h-4" />
-                  <span className="text-sm">{comment.dislikes}</span>
-                </button>
-              </div>
+          <button
+            onClick={handleOptimisticLike}
+            className={`flex items-center space-x-1 ${
+              likeStatus === 'liked' 
+                ? 'text-blue-500' 
+                : 'text-gray-400 hover:text-blue-400'
+            }`}
+          >
+            <ThumbsUp className="w-4 h-4" />
+            <span className="text-sm">{optimisticLikes}</span>
+          </button>
+          <button
+            onClick={handleOptimisticDislike}
+            className={`flex items-center space-x-1 ${
+              likeStatus === 'disliked' 
+                ? 'text-red-500' 
+                : 'text-gray-400 hover:text-red-400'
+            }`}
+          >
+            <ThumbsDown className="w-4 h-4" />
+            <span className="text-sm">{optimisticDislikes}</span>
+          </button>
+        </div>
 
-              <CommentDropdown onReport={handleReport} />
-            </div>
+        <CommentDropdown onReport={handleReport} />
+      </div>
 
             {isReplying && (
     <CommentInput
@@ -465,8 +545,8 @@ const isNewComment = () => {
             onDislike={onDislike}
             onReply={onReply}
             onToggleCollapse={onToggleCollapse}
-            replyOrderIndex={replyOrderIndex +1} 
-          />
+            replyOrderIndex={replyOrderIndex + 1} 
+            currentUserId={null}          />
         ))}
           </div>
         </div>

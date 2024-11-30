@@ -18,25 +18,24 @@ import {
 
 
 const API_BASE_URL =  "https://deploy-two-jade.vercel.app";
-
-async function handleCheckAuth(router: any): Promise<{ isAuthenticated: boolean; username: string | null }> {
+async function handleCheckAuth(router: any): Promise<{ isAuthenticated: boolean; username: string | null,userId:string|null }> {
   try {
     const response = await axios.get(`${API_BASE_URL}/check-auth`, { withCredentials: true });
-    return { isAuthenticated: true, username: response.data.username };
+    return { isAuthenticated: true, username: response.data.username,userId: response.data.userId };
   } catch (error) {
     router.push('/login'); // Redirect if not authenticated
-    return { isAuthenticated: false, username: null };
+    return { isAuthenticated: false, username: null,userId:null };
   }
 }
 
 
-async function handleCheckUsername(router: any): Promise<{ isAuthenticated: boolean; username: string | null }> {
+async function handleCheckUsername(router: any): Promise<{ isAuthenticated: boolean; username: string | null, userId: string | null }> {
   try {
     // Check if the user is authenticated by checking their session or JWT token
     const response = await axios.get(`${API_BASE_URL}/check-auth`, { withCredentials: true });
-    return { isAuthenticated: true, username: response.data.username }; // Return the username
+    return { isAuthenticated: true, username: response.data.username,userId:response.data.userId }; // Return the username
   } catch (error) {
-    return { isAuthenticated: false, username: null }; // Don't redirect, just return the state
+    return { isAuthenticated: false, username: null,userId:null }; // Don't redirect, just return the state
   }
 }
 
@@ -111,6 +110,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
   
 
@@ -118,10 +118,13 @@ export default function Home() {
   
   useEffect(() => {
     const fetchAuthStatus = async () => {
-      const { isAuthenticated, username } = await handleCheckUsername(router);
+      const { isAuthenticated, username,userId } = await handleCheckUsername(router);
+
       setAuthenticated(isAuthenticated); // Update authenticated state
       setUserName(username); // Set username if authenticated
+      setUserId(userId)
  
+      
       
     };
 
@@ -151,6 +154,7 @@ export default function Home() {
   const handleLike = async (id: string) => {
     const { isAuthenticated } = await handleCheckAuth(router); // Pass router here
     if (!isAuthenticated) return;
+    
     
     try {
       const response = await commentService.likeComment(id);
@@ -281,6 +285,7 @@ export default function Home() {
       setComments(sortedComments);
     }
   };
+
   
   const handelLogout = async ()=>{
     try {
@@ -358,10 +363,12 @@ export default function Home() {
             <Comment
               key={comment.comment_id ? comment.comment_id : "1sdfsd"}
               comment={comment}
+              currentUserId={userId}
               onLike={handleLike}
               onDislike={handleDislike}
               onReply={handleReply}
               onToggleCollapse={handleToggleCollapse}
+              
             />
           ))}
         </div>

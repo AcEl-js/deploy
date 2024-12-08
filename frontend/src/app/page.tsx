@@ -17,8 +17,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import CommunityRulesPopup from '@/components/CommunityRulesPopup';
 
-const API_BASE_URL =  "https://deploy-two-jade.vercel.app";
 
+
+const API_BASE_URL =  "https://deploy-two-jade.vercel.app";
 async function handleCheckAuth(router: any): Promise<{ isAuthenticated: boolean; username: string | null,userId:string|null }> {
   try {
     const response = await axios.get(`${API_BASE_URL}/check-auth`, { withCredentials: true });

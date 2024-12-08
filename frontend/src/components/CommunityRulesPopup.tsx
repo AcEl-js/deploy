@@ -33,7 +33,8 @@ const CommunityRulesPopup: React.FC<CommunityRulesPopupProps> = ({
   const handleAgree = async () => {
     if (Object.values(checkedRules).every(rule => rule === true)) {
       try {
-        const API_BASE_URL =  "https://deploy-two-jade.vercel.app";        await axios.post(`${API_BASE_URL}/agree-to-rules`, 
+        const API_BASE_URL =  "https://deploy-two-jade.vercel.app";       
+        await axios.post(`${API_BASE_URL}/agree-to-rules`, 
           { 
             userId, 
             agreedRules: Object.keys(checkedRules)

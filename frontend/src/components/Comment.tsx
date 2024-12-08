@@ -486,7 +486,7 @@ const isNewComment = () => {
         </div>
       )}
       <div className="py-2">
-        {/* URL Alert */}
+       {/*  {/* URL Alert */}
         {showUrlAlert && (
               <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-2" role="alert">
                 <div className="flex items-center">
@@ -494,7 +494,7 @@ const isNewComment = () => {
                   <p>This comment contains a URL and may have restricted visibility.</p>
                 </div>
               </div>
-            )}
+            )} */}
            
 
         <div className="flex items-start space-x-2">

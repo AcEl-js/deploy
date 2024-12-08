@@ -20,6 +20,7 @@ import CommunityRulesPopup from '@/components/CommunityRulesPopup';
 
 
 const API_BASE_URL =  "https://deploy-two-jade.vercel.app";
+
 async function handleCheckAuth(router: any): Promise<{ isAuthenticated: boolean; username: string | null,userId:string|null }> {
   try {
     const response = await axios.get(`${API_BASE_URL}/check-auth`, { withCredentials: true });
@@ -110,6 +111,8 @@ export const commentService = {
 
 };
 
+
+
 export default function Home() {
   const [comments, setComments] = useState<CommentType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -120,6 +123,10 @@ export default function Home() {
   const [showCommunityRulesPopup, setShowCommunityRulesPopup] = useState(false);
   const router = useRouter();
 
+
+  
+
+
   useEffect(() => {
     const fetchAuthStatus = async () => {
       const { isAuthenticated, username, userId } = await handleCheckUsername(router);
@@ -129,16 +136,7 @@ export default function Home() {
       setUserId(userId);
 
       // If authenticated, check if they've agreed to community rules
-      if (isAuthenticated && userId) {
-        try {
-          const response = await axios.get(`${API_BASE_URL}/check-community-rules/${userId}`, { withCredentials: true });
-          if (!response.data.agreedToCommunityRules) {
-            setShowCommunityRulesPopup(true);
-          }
-        } catch (error) {
-          console.error('Failed to check community rules', error);
-        }
-      }
+     
     };
     fetchAuthStatus();
   }, [router]);
@@ -260,9 +258,25 @@ export default function Home() {
     }
   };
 
+  const checkCommunityRules = async (userId: string | null) => {
+  if (!userId) return false;
+  
+  try {
+    const response = await axios.get(`${API_BASE_URL}/check-community-rules/${userId}`, { withCredentials: true });
+    return response.data.agreedToCommunityRules;
+  } catch (error) {
+    console.error('Failed to check community rules', error);
+    return false;
+  }
+};
   const handleNewComment = async (content: string, isSpoiler: boolean) => {
     const { isAuthenticated } = await handleCheckAuth(router); // Pass router here
     if (!isAuthenticated) return;
+    const agreedToCommunityRules = await checkCommunityRules(userId);
+    if (!agreedToCommunityRules) {
+      setShowCommunityRulesPopup(true);
+      return;
+    }
     try {
       const newComment = await commentService.createComment(content, 'post1', null, isSpoiler);
       if (newComment.status === 'flagged') {
@@ -278,6 +292,11 @@ export default function Home() {
   const handleReply = async (parentId: string, content: string, isSpoiler: boolean) => {
     const { isAuthenticated } = await handleCheckAuth(router); // Pass router here
     if (!isAuthenticated) return;
+    const agreedToCommunityRules = await checkCommunityRules(userId);
+    if (!agreedToCommunityRules) {
+      setShowCommunityRulesPopup(true);
+      return;
+    }
     try {
       const newReply = await commentService.createComment(content, 'post1', parentId, isSpoiler);
       if (newReply.status === 'flagged') {

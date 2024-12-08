@@ -22,7 +22,7 @@ const CommunityRulesPopup: React.FC<CommunityRulesPopupProps> = ({ userId, onAgr
   const handleAgree = async () => {
     if (checkedRules.noHarassment && checkedRules.noSpam) {
       try {
-        const API_BASE_URL = "http://localhost:8080";
+        const API_BASE_URL =  "https://deploy-two-jade.vercel.app";
         await axios.post(`${API_BASE_URL}/agree-to-rules`, 
           { userId }, 
           { withCredentials: true }

@@ -2,14 +2,11 @@ const mongoose = require('mongoose');
 const {isEmail} = require('validator');
 const Schema = mongoose.Schema;
 const bcrypt = require('bcrypt');
-
 const userSchema = new Schema(
     {
     name: {
         type: String,
         required: [true,'Please enter an First Name'],
-       
-
     },
     email: {
         type: String,
@@ -23,9 +20,12 @@ const userSchema = new Schema(
          required:[true,'Please enter an Password'],
          unique: true,
         minlength: [6,'Password should be atleast 6 characters'],
+    },
+    // New field to track community rules agreement
+    agreedToCommunityRules: {
+        type: Boolean,
+        default: false
     }
-
-
 },
 {
     collection: 'users',

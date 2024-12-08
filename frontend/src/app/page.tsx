@@ -6,7 +6,7 @@ import { CommentInput } from '../components/CommentInput';
 import type { Comment as CommentType } from '../types';
 import axios from 'axios';
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, Check } from "lucide-react";
+import { ChevronDown,ChevronUp, Check  } from "lucide-react";
 import Link from 'next/link';
 
 import {
@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
+import CommunityRulesPopup from '@/components/CommunityRulesPopup';
 
 const API_BASE_URL =  "https://deploy-two-jade.vercel.app";
 
@@ -64,15 +64,18 @@ export const commentService = {
     }
   },
 
-  async getComments(post_id: string): Promise<CommentType[]> {
+  async getComments(post_id: string, userId:string|null): Promise<CommentType[]> {
     try {
-      const response = await axios.get(`${API_BASE_URL}/comments/${post_id}`);
+      const response = await axios.get(`${API_BASE_URL}/comments/${post_id}`, {
+        headers: { Authorization: `Bearer ${userId}` },
+      });
       return response.data;
     } catch (error) {
       console.error('Failed to fetch comments', error);
       throw error;
     }
   },
+  
 
   async likeComment(comment_id: string): Promise<{ likes: number, dislikes: number, userInteraction: 'like' | 'none' }> {
    
@@ -113,7 +116,35 @@ export default function Home() {
   const [userName, setUserName] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [sortType, setSortType] = useState<string>('newest');
+  const [showCommunityRulesPopup, setShowCommunityRulesPopup] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchAuthStatus = async () => {
+      const { isAuthenticated, username, userId } = await handleCheckUsername(router);
+
+      setAuthenticated(isAuthenticated);
+      setUserName(username);
+      setUserId(userId);
+
+      // If authenticated, check if they've agreed to community rules
+      if (isAuthenticated && userId) {
+        try {
+          const response = await axios.get(`${API_BASE_URL}/check-community-rules/${userId}`, { withCredentials: true });
+          if (!response.data.agreedToCommunityRules) {
+            setShowCommunityRulesPopup(true);
+          }
+        } catch (error) {
+          console.error('Failed to check community rules', error);
+        }
+      }
+    };
+    fetchAuthStatus();
+  }, [router]);
+
+  const handleCommunityRulesAgree = () => {
+    setShowCommunityRulesPopup(false);
+  };
 
 
 
@@ -143,8 +174,9 @@ export default function Home() {
   // Fetch initial comments
   useEffect(() => {
     const fetchComments = async () => {
+      const { userId } = await handleCheckUsername(router);
       try {
-        const fetchedComments = await commentService.getComments('post1');
+        const fetchedComments = await commentService.getComments('post1',userId);
         setComments(fetchedComments);
       } catch (error) {
         console.error('Failed to fetch comments:', error);
@@ -232,6 +264,9 @@ export default function Home() {
     if (!isAuthenticated) return;
     try {
       const newComment = await commentService.createComment(content, 'post1', null, isSpoiler);
+      if (newComment.status === 'flagged') {
+        alert('Your comment contains a URL and has been flagged for review. It will only be visible to you.');
+      }
       setComments([newComment, ...comments]);
     } catch (error) {
       console.error('Failed to create comment:', error);
@@ -244,7 +279,10 @@ export default function Home() {
     if (!isAuthenticated) return;
     try {
       const newReply = await commentService.createComment(content, 'post1', parentId, isSpoiler);
-      
+      if (newReply.status === 'flagged') {
+        alert('Your reply contains a URL and has been flagged for review. It will only be visible to you.');
+      }
+
       const addReply = (comments: CommentType[]): CommentType[] => {
         return comments.map(comment => {
           if (comment.comment_id === parentId) {
@@ -268,7 +306,7 @@ export default function Home() {
   };
 
   const handleToggleCollapse = (id: string) => {
-    
+    console.log('Toggle collapse for comment:', id);
   };
   
   const sortedCommentsRef = useRef<CommentType[] | null>(null);
@@ -396,10 +434,17 @@ export default function Home() {
               onReply={handleReply}
               onToggleCollapse={handleToggleCollapse}
               
+              
             />
           ))}
         </div>
       </div>
+      {showCommunityRulesPopup && userId && (
+        <CommunityRulesPopup
+          userId={userId} 
+          onAgree={handleCommunityRulesAgree} 
+        />
+      )}
     </div>
   );
 }

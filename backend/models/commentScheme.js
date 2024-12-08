@@ -29,9 +29,9 @@ const CommentSchema = new mongoose.Schema({
     required: true
   },
   post_id: {
-      type: String,
-      required: true
-    },
+    type: String,
+    required: true
+  },
   user_profile_picture_url: String,
   comment_text: {
     type: String,
@@ -57,8 +57,12 @@ const CommentSchema = new mongoose.Schema({
   reactions: [ReactionSchema],
   status: {
     type: String,
-    enum: ['active', 'deleted', 'reported'],
+    enum: ['active', 'deleted', 'reported', 'flagged'], // Added 'flagged' status
     default: 'active'
+  },
+  containsUrls: {
+    type: Boolean,
+    default: false
   },
   isSpoiler: {
     type: Boolean,

@@ -54,7 +54,8 @@ module.exports.createAccount = async (req, res) => {
 
         res.cookie('jwt', token, {
              httpOnly: true,
-             sameSite: 'None',
+            /*  sameSite: 'None', */
+            sameSite: 'Strict',
              secure: process.env.NODE_ENV === 'production',
              maxAge: maxAge * 1000 });
         res.status(200).json({ user: user._id ,msg:`Welcome  ${name} you register successfully  👋`});
@@ -75,8 +76,9 @@ module.exports.login = async (req, res) => {
         // In development, ensure secure is set based on the environment
         res.cookie('jwt', token, { 
             httpOnly: true, 
-            secure: process.env.NODE_ENV === 'production',  // Only use secure cookies in production
-            sameSite: 'None',  // Helps prevent CSRF attacks
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict',  // Only use secure cookies in production
+         /*    sameSite: 'None',  */ // Helps prevent CSRF attacks
             maxAge: maxAge * 1000
         });
 
@@ -110,9 +112,50 @@ module.exports.logoutUser = (req, res) => {
         httpOnly: true,
         expires: new Date(0), // Set to past date
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'None',
         path: '/'
     });
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json({ message: 'Logged out successfully' });
+};
+
+
+// In your user controller or routes file
+module.exports.checkCommunityRules = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const user = await User.findById(userId);
+        
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        res.status(200).json({ 
+            agreedToCommunityRules: user.agreedToCommunityRules 
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+module.exports.agreeToCommunityRules = async (req, res) => {
+    try {
+        const { userId } = req.body;
+        
+        const user = await User.findByIdAndUpdate(
+            userId, 
+            { agreedToCommunityRules: true }, 
+            { new: true }
+        );
+        
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        res.status(200).json({ 
+            message: 'Successfully agreed to community rules',
+            agreedToCommunityRules: true 
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
 };

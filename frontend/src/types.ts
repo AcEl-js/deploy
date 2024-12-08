@@ -22,6 +22,7 @@ export interface Comment {
   edited_timestamp?: string;
   attachments: any[];
   flags: number;
+  containsUrls:boolean;
   likeCounter?: number;
   dislikeCounter?: number;
   depth: number;

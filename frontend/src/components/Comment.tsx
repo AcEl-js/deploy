@@ -1,8 +1,12 @@
 import React, { useEffect,useState,useRef } from 'react';
-import { MessageSquare, ThumbsUp, ThumbsDown, Eye, Plus, Minus } from 'lucide-react';
+import { MessageSquare, ThumbsUp, ThumbsDown, Eye, Plus, Minus, AlertTriangle } from 'lucide-react';
 import { CommentDropdown } from './CommentDropdown';
 import { Send } from 'lucide-react';
 
+const containsUrls = (text: string): boolean => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return urlRegex.test(text);
+};
 
 // Simple Avatar component
 const Avatar = ({ name }: { name: string }) => {
@@ -152,8 +156,9 @@ interface CommentType {
   attachments: any[];
   isSpoiler?: boolean;
   edited_timestamp?: string;
+  containsUrls?: boolean;
+  isAuthorOnly?: boolean;
 }
-
 interface CommentProps {
   comment: CommentType;
   currentUserId: string | null; 
@@ -161,7 +166,9 @@ interface CommentProps {
   onDislike: (id: string) => void;
   onReply: (parentId: string, content: string, isSpoiler: boolean) => void;
   onToggleCollapse: (id: string) => void;
+  isAuthorOnly?: boolean;
 }
+
 
 export function Comment({ 
   comment, 
@@ -170,6 +177,7 @@ export function Comment({
   onDislike, 
   onReply, 
   onToggleCollapse, 
+  isAuthorOnly = false,
   replyOrderIndex = 0 
 }: CommentProps & { replyOrderIndex?: number }) {
   const getUserInitialLikeStatus = () => {
@@ -198,7 +206,29 @@ export function Comment({
   const [likeStatus, setLikeStatus] = useState<'neutral' | 'liked' | 'disliked'>(
     getUserInitialLikeStatus()
   );
+  const [showUrlAlert, setShowUrlAlert] = useState(false);
 
+  useEffect(() => {
+    // Check if comment contains URLs and show alert
+    if (containsUrls(comment.comment_text)) {
+      setShowUrlAlert(true);
+      console.log(`Comment ${comment.comment_id} contains URLs and may be restricted`);
+    }
+  }, [comment.comment_text]);
+
+  // Modify comment visibility logic
+  const shouldShowComment = () => {
+    // Show comment if:
+    // 1. Not author-only, or
+    // 2. Current user is the author, or 
+    // 3. Current user is an admin/moderator
+    return !isAuthorOnly || 
+           currentUserId === comment.username || 
+           false; // Replace with actual admin check if needed
+  };
+
+  
+  
   const handleOptimisticLike = async () => {
     switch (likeStatus) {
       case 'neutral':
@@ -405,6 +435,8 @@ const isNewComment = () => {
   };
 
   return (
+    <>
+      {shouldShowComment() && (
     <div className="group relative mb-8" ref={commentRef}>
     {comment.replies.length > 0 && (
       <div className="absolute left-0 top-8 bottom-0">
@@ -454,6 +486,17 @@ const isNewComment = () => {
         </div>
       )}
       <div className="py-2">
+        {/* URL Alert */}
+        {showUrlAlert && (
+              <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-2" role="alert">
+                <div className="flex items-center">
+                  <AlertTriangle className="w-6 h-6 mr-2" />
+                  <p>This comment contains a URL and may have restricted visibility.</p>
+                </div>
+              </div>
+            )}
+           
+
         <div className="flex items-start space-x-2">
           <div className="flex-shrink-0">
             <Avatar name={comment.username} />
@@ -470,6 +513,12 @@ const isNewComment = () => {
 
             <div className={`mt-1 ${comment.isSpoiler && !showSpoiler ? 'blur-md' : ''}`}>
               <div className={`text-gray-300 text-sm ${comment.isSpoiler && !showSpoiler ? ' cursor-pointer' : ''}`}  onClick={() => setShowSpoiler(true)}>{comment.comment_text}</div>
+              {comment.isAuthorOnly && (
+                <div className="text-xs text-yellow-500 mt-1 flex items-center">
+                  <AlertTriangle className="w-4 h-4 mr-1" />
+                  Only visible to you
+                </div>
+              )}
               {comment.attachments.length > 0 && (
                 <div className="mt-2 space-y-2">
                   {comment.attachments.map((attachment, index) => (
@@ -491,67 +540,73 @@ const isNewComment = () => {
               </button>
             )}
 
-<div className="flex items-center space-x-4 my-2 mb-2 ">
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={() => setIsReplying(!isReplying)}
-            className="flex items-center space-x-1 text-gray-400 hover:text-gray-200"
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span className="text-sm">Reply</span>
-          </button>
+            <div className="flex items-center space-x-4 my-2 mb-2 ">
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => setIsReplying(!isReplying)}
+                        className="flex items-center space-x-1 text-gray-400 hover:text-gray-200"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        <span className="text-sm">Reply</span>
+                      </button>
 
-          <button
-            onClick={handleOptimisticLike}
-            className={`flex items-center space-x-1 ${
-              likeStatus === 'liked' 
-                ? 'text-blue-500' 
-                : 'text-gray-400 hover:text-blue-400'
-            }`}
-          >
-            <ThumbsUp className="w-4 h-4" />
-            <span className="text-sm">{optimisticLikes}</span>
-          </button>
-          <button
-            onClick={handleOptimisticDislike}
-            className={`flex items-center space-x-1 ${
-              likeStatus === 'disliked' 
-                ? 'text-red-500' 
-                : 'text-gray-400 hover:text-red-400'
-            }`}
-          >
-            <ThumbsDown className="w-4 h-4" />
-            <span className="text-sm">{optimisticDislikes}</span>
-          </button>
-        </div>
+                      <button
+                        onClick={handleOptimisticLike}
+                        className={`flex items-center space-x-1 ${
+                          likeStatus === 'liked' 
+                            ? 'text-blue-500' 
+                            : 'text-gray-400 hover:text-blue-400'
+                        }`}
+                      >
+                        <ThumbsUp className="w-4 h-4" />
+                        <span className="text-sm">{optimisticLikes}</span>
+                      </button>
+                      <button
+                        onClick={handleOptimisticDislike}
+                        className={`flex items-center space-x-1 ${
+                          likeStatus === 'disliked' 
+                            ? 'text-red-500' 
+                            : 'text-gray-400 hover:text-red-400'
+                        }`}
+                      >
+                        <ThumbsDown className="w-4 h-4" />
+                        <span className="text-sm">{optimisticDislikes}</span>
+                      </button>
+                    </div>
 
-        <CommentDropdown onReport={handleReport} />
-      </div>
+                    <CommentDropdown onReport={handleReport} />
+                  </div>
 
-            {isReplying && (
-    <CommentInput
-      onSubmit={handleSubmitReply}
-      isReply={true}
-      initialContent={replyContent}
-    />
-  )}
+                        {isReplying && (
+                <CommentInput
+                  onSubmit={handleSubmitReply}
+                  isReply={true}
+                  initialContent={replyContent}
+                />
+              )}
+              
 
-        {visibleReplies.map((reply) => (
-          
-          <Comment
-            key={reply.comment_id}
-            comment={reply}
-            onLike={onLike}
-            onDislike={onDislike}
-            onReply={onReply}
-            onToggleCollapse={onToggleCollapse}
-            replyOrderIndex={replyOrderIndex + 1} 
-            currentUserId={null}          />
-        ))}
+              {visibleReplies.map((reply) => (
+                
+                <Comment
+                  key={reply.comment_id}
+                  comment={reply}
+                  onLike={onLike}
+                  onDislike={onDislike}
+                  onReply={onReply}
+                  onToggleCollapse={onToggleCollapse}
+                  replyOrderIndex={replyOrderIndex + 1} 
+                  currentUserId={null}
+                  isAuthorOnly={comment.isAuthorOnly}
+                            />
+                  
+              ))}
           </div>
         </div>
       </div>
     </div>
+     )}
+    </>
   );
 }
 

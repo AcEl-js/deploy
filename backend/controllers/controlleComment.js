@@ -4,93 +4,130 @@ const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 const db = mongoose.connection;
 
+const URL_REGEX = /https?:\/\/[^\s]+/gi;
 
 
-  async function createComment(req, res) {
-    try {
-      const {
-        comment_text,
-        post_id,
-        parent_comment_id = null, // Link to a parent (null for top-level)
-        isSpoiler = false,
-      } = req.body;
-  
-      // Validate required fields
-      if (!comment_text || !post_id) {
-        return res.status(400).json({ message: 'Missing required fields' });
+
+async function createComment(req, res) {
+  try {
+    const {
+      comment_text,
+      post_id,
+      parent_comment_id = null,
+      isSpoiler = false,
+    } = req.body;
+
+    // Validate required fields
+    if (!comment_text || !post_id) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Check for URLs in the comment
+    const hasUrls = comment_text.match(URL_REGEX);
+    const commentStatus = hasUrls ? 'flagged' : 'active';
+
+    const newComment = new Comment({
+      user_id: req.user._id,
+      username: req.user.username,
+      comment_text,
+      post_id,
+      parent_comment_id,
+      isSpoiler,
+      user_profile_picture_url: null,
+      status: commentStatus, // New status field
+      likes: 0,
+      dislikes: 0,
+      timestamp: new Date(),
+      edited_timestamp: null,
+      // Add a new field to track URL detection
+      containsUrls: !!hasUrls
+    });
+
+    await newComment.save();
+
+    // If comment contains URLs, you might want to log it for review
+    if (hasUrls) {
+      console.log(`Comment with URL flagged: ${newComment._id}`);
+      // Optionally, you could add additional logging or notification logic here
+    }
+
+    res.status(201).json({ 
+      message: hasUrls ? 'Comment flagged for review' : 'Comment added successfully', 
+      comment: newComment 
+    });
+  } catch (error) {
+    console.error('Error creating comment:', error);
+    res.status(500).json({ message: 'Error creating comment', error: error.message });
+  }
+}
+
+// Modify getComments to filter out flagged comments
+async function getComments(req, res) {
+  try {
+    const { post_id } = req.params;
+     let userId
+    
+    if (req.headers.authorization?.split(' ')[1]!="null") {
+     userId= req.headers.authorization?.split(' ')[1]
+    }
+
+
+    // Fetch comments with special handling for flagged comments
+    const comments = await Comment.find({ 
+      post_id,
+      $or: [
+        { status: 'active' },
+        { 
+          status: 'flagged', 
+          user_id: userId // Only show flagged comments to their original author
+        }
+      ]
+    }).sort({ timestamp: -1 });
+
+    // Create a map to store comments by their `comment_id`
+    const commentMap = {};
+    comments.forEach((comment) => {
+      commentMap[comment.comment_id] = { 
+        ...comment.toObject(), 
+        replies: [], 
+        depth: 0,
+        // Add a flag to indicate if comment is visible only to the author
+        isAuthorOnly: comment.status === 'flagged'
+      }; 
+    });
+
+    // Build the tree structure
+    const commentTree = [];
+    comments.forEach((comment) => {
+      if (comment.parent_comment_id) {
+        // If the comment is a reply, add it to its parent's replies
+        const parent = commentMap[comment.parent_comment_id];
+        if (parent) {
+          const currentDepth = parent.depth + 1;
+          commentMap[comment.comment_id].depth = currentDepth;
+          parent.replies.push(commentMap[comment.comment_id]);
+        }
+      } else {
+        // If it's a top-level comment, add it to the tree
+        commentTree.push(commentMap[comment.comment_id]);
       }
-  
-      const newComment = new Comment({
-        user_id:   req.user._id, // Ensure user is logged in
-        username: req.user.username,
-        comment_text,
-        post_id,
-        parent_comment_id,
-        isSpoiler,
-        user_profile_picture_url: null,//req.user.profile_picture || null,
-        status: 'active',
-        likes: 0,
-        dislikes: 0,
-        timestamp: new Date(),
-        edited_timestamp: null,
-      });
-  
-      await newComment.save();
-  
-      res.status(201).json({ message: 'Comment added successfully', comment: newComment });
-    } catch (error) {
-      console.error('Error creating comment:', error);
-      res.status(500).json({ message: 'Error creating comment', error: error.message });
-    }
-  }
-  
+    });
 
-  async function getComments(req, res) {
-    try {
-      const { post_id } = req.params;
-  
-      // Fetch all comments for the given post
-      const comments = await Comment.find({ post_id }).sort({ timestamp: -1 });
-  
-      // Create a map to store comments by their `comment_id`
-      const commentMap = {};
-      comments.forEach((comment) => {
-        commentMap[comment.comment_id] = { ...comment.toObject(), replies: [], depth: 0 }; // Add depth field
-      });
-  
-      // Build the tree structure
-      const commentTree = [];
-      comments.forEach((comment) => {
-        if (comment.parent_comment_id) {
-          // If the comment is a reply, add it to its parent's replies
-          const parent = commentMap[comment.parent_comment_id];
-          if (parent) {
-            const currentDepth = parent.depth + 1;
-            commentMap[comment.comment_id].depth = currentDepth; // Set depth for the reply
-            parent.replies.push(commentMap[comment.comment_id]);
-          }
-        } else {
-          // If it's a top-level comment, add it to the tree
-          commentTree.push(commentMap[comment.comment_id]);
-        }
-      });
-  
-      // Sort replies for each comment by likes in descending order
-      Object.values(commentMap).forEach((comment) => {
-        if (comment.replies.length > 0) {
-          comment.replies.sort((a, b) => b.likes - a.likes);
-        }
-      });
-  
-      res.json(commentTree);
-    } catch (error) {
-      console.error('Error fetching comments:', error);
-      res.status(500).json({ message: 'Error fetching comments', error: error.message });
-    }
+    // Sort replies for each comment by likes in descending order
+    Object.values(commentMap).forEach((comment) => {
+      if (comment.replies.length > 0) {
+        comment.replies.sort((a, b) => b.likes - a.likes);
+      }
+    });
+
+    res.json(commentTree);
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    res.status(500).json({ message: 'Error fetching comments', error: error.message });
   }
-  
-  
-  
+}
+
+
   
 
 

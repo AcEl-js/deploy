@@ -77,6 +77,11 @@ app.get('/logout', AuthControler.logoutUser)
 
 
 
+app.get('/check-community-rules/:userId', authorizationUser, AuthControler.checkCommunityRules);
+app.post('/agree-to-rules', authorizationUser, AuthControler.agreeToCommunityRules);
+
+
+
 app.post('/api/createUser', AuthControler.createAccount);
 app.post('/api/login', AuthControler.login)
 app.post('/comments', authorizationUser, commentController.createComment);

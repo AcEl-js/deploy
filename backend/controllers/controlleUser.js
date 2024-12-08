@@ -74,13 +74,11 @@ module.exports.login = async (req, res) => {
         const token = createToken(user._id);
 
         // In development, ensure secure is set based on the environment
-        res.cookie('jwt', token, { 
-            httpOnly: true, 
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'Strict',  // Only use secure cookies in production
-         /*    sameSite: 'None',  */ // Helps prevent CSRF attacks
-            maxAge: maxAge * 1000
-        });
+          res.cookie('jwt', token, {
+             httpOnly: true,
+             sameSite: 'None',
+             secure: process.env.NODE_ENV === 'production',
+             maxAge: maxAge * 1000 });
 
         res.status(200).json({ user: user._id, msg: `Welcome you logged in successfully 👋` });
     } catch (err) {

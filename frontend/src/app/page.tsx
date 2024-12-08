@@ -279,9 +279,7 @@ export default function Home() {
     }
     try {
       const newComment = await commentService.createComment(content, 'post1', null, isSpoiler);
-      if (newComment.status === 'flagged') {
-        alert('Your comment contains a URL and has been flagged for review. It will only be visible to you.');
-      }
+     
       setComments([newComment, ...comments]);
     } catch (error) {
       console.error('Failed to create comment:', error);
@@ -299,9 +297,7 @@ export default function Home() {
     }
     try {
       const newReply = await commentService.createComment(content, 'post1', parentId, isSpoiler);
-      if (newReply.status === 'flagged') {
-        alert('Your reply contains a URL and has been flagged for review. It will only be visible to you.');
-      }
+      
 
       const addReply = (comments: CommentType[]): CommentType[] => {
         return comments.map(comment => {

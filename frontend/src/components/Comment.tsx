@@ -4,7 +4,7 @@ import { CommentDropdown } from './CommentDropdown';
 import { Send } from 'lucide-react';
 
 const containsUrls = (text: string): boolean => {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const URL_REGEX = /(\b(www\.|https?:\/\/|git:\/\/|ftp:\/\/|file:\/\/|ssh:\/\/)[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gi;
   return urlRegex.test(text);
 };
 

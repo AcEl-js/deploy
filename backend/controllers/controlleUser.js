@@ -54,8 +54,7 @@ module.exports.createAccount = async (req, res) => {
 
         res.cookie('jwt', token, {
              httpOnly: true,
-            /*  sameSite: 'None', */
-            sameSite: 'Strict',
+             sameSite: 'None',
              secure: process.env.NODE_ENV === 'production',
              maxAge: maxAge * 1000 });
         res.status(200).json({ user: user._id ,msg:`Welcome  ${name} you register successfully  👋`});
@@ -106,10 +105,11 @@ module.exports.getuserInfo = async (req, res) => {
 
 module.exports.logoutUser = (req, res) => {
     // Clear the cookie containing the JWT token
-    res.cookie('jwt', '', {
+   res.cookie('jwt', '', {
         httpOnly: true,
         expires: new Date(0), // Set to past date
         secure: process.env.NODE_ENV === 'production',
+        sameSite: 'None',
         path: '/'
     });
     res.setHeader('Cache-Control', 'no-store');

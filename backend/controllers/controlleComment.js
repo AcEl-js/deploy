@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 const db = mongoose.connection;
 
-const URL_REGEX = /(\b(www\.|https?:\/\/|git:\/\/|ftp:\/\/|file:\/\/|ssh:\/\/)[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gi;
+const URL_REGEX = /(\b(www\.|https?:\/\/|git:\/\/|ftp:\/\/|file:\/\/|ssh:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*)?)/gi;
 
 
 

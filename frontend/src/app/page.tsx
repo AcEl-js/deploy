@@ -122,8 +122,20 @@ export default function Home() {
   const [sortType, setSortType] = useState<string>('newest');
   const [showCommunityRulesPopup, setShowCommunityRulesPopup] = useState(false);
   const router = useRouter();
-  const [selectedEpisode, setSelectedEpisode] = useState(localStorage.getItem("selectedEpisode")|| 1);
-  localStorage.setItem("selectedEpisode", `${selectedEpisode}`);
+  const [selectedEpisode, setSelectedEpisode] = useState(1);
+
+  useEffect(() => {
+    // Retrieve the value from localStorage after the component mounts
+    const storedEpisode = localStorage.getItem("selectedEpisode");
+    if (storedEpisode) {
+      setSelectedEpisode(Number(storedEpisode));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Update localStorage whenever selectedEpisode changes
+    localStorage.setItem("selectedEpisode", `${selectedEpisode}`);
+  }, [selectedEpisode]);
   
   // Mock episodes data - in real app, this would come from props or API
   const episodes = Array.from({ length: 12 }, (_, i) => i + 1);

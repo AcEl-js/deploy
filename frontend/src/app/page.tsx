@@ -19,7 +19,7 @@ import CommunityRulesPopup from '@/components/CommunityRulesPopup';
 
 
 
-const API_BASE_URL =  "https://deploy-two-jade.vercel.app";
+const API_BASE_URL = "http://localhost:8080"  /* "https://deploy-two-jade.vercel.app"; */
 
 async function handleCheckAuth(router: any): Promise<{ isAuthenticated: boolean; username: string | null,userId:string|null }> {
   try {
@@ -122,9 +122,14 @@ export default function Home() {
   const [sortType, setSortType] = useState<string>('newest');
   const [showCommunityRulesPopup, setShowCommunityRulesPopup] = useState(false);
   const router = useRouter();
-
-
+  const [selectedEpisode, setSelectedEpisode] = useState(localStorage.getItem("selectedEpisode")|| 1);
+  localStorage.setItem("selectedEpisode", `${selectedEpisode}`);
   
+  // Mock episodes data - in real app, this would come from props or API
+  const episodes = Array.from({ length: 12 }, (_, i) => i + 1);
+
+
+ 
 
 
   useEffect(() => {
@@ -175,7 +180,7 @@ export default function Home() {
     const fetchComments = async () => {
       const { userId } = await handleCheckUsername(router);
       try {
-        const fetchedComments = await commentService.getComments('post1',userId);
+        const fetchedComments = await commentService.getComments(`Episode ${selectedEpisode}`,userId);
         setComments(fetchedComments);
       } catch (error) {
         console.error('Failed to fetch comments:', error);
@@ -189,7 +194,7 @@ export default function Home() {
     
     
 
-  }, []);
+  }, [selectedEpisode]);
 
   
   const handleLike = async (id: string) => {
@@ -278,8 +283,10 @@ export default function Home() {
       return;
     }
     try {
-      const newComment = await commentService.createComment(content, 'post1', null, isSpoiler);
-     
+      const newComment = await commentService.createComment(content, `Episode ${selectedEpisode}`, null, isSpoiler);
+      if (newComment.status === 'flagged') {
+        alert('Your comment contains a URL and has been flagged for review. It will only be visible to you.');
+      }
       setComments([newComment, ...comments]);
     } catch (error) {
       console.error('Failed to create comment:', error);
@@ -296,8 +303,10 @@ export default function Home() {
       return;
     }
     try {
-      const newReply = await commentService.createComment(content, 'post1', parentId, isSpoiler);
-      
+      const newReply = await commentService.createComment(content, `Episode ${selectedEpisode}`, parentId, isSpoiler);
+      if (newReply.status === 'flagged') {
+        alert('Your reply contains a URL and has been flagged for review. It will only be visible to you.');
+      }
 
       const addReply = (comments: CommentType[]): CommentType[] => {
         return comments.map(comment => {
@@ -322,7 +331,7 @@ export default function Home() {
   };
 
   const handleToggleCollapse = (id: string) => {
-    console.log('Toggle collapse for comment:', id);
+   
   };
   
   const sortedCommentsRef = useRef<CommentType[] | null>(null);
@@ -379,13 +388,34 @@ export default function Home() {
     <div className="min-h-screen bg-gray-900 text-gray-100">
     <div className="max-w-3xl mx-auto py-8 px-4">
     <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-4">
-          <h2 className="text-lg font-semibold">Episode 1</h2>
+        <div className="flex items-center gap-4 ">  
+          <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="text-gray-300 hover:text-gray-800">
+                <h2 className="text-lg font-semibold">Episode {selectedEpisode}</h2>
+                  <ChevronDown className=" h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-gray-800 text-gray-100 border-gray-700">
+                {episodes.map((ep) => (
+                  <DropdownMenuItem
+                    key={ep}
+                    className="hover:bg-gray-700 cursor-pointer"
+                    onClick={() => setSelectedEpisode(ep)}
+                  >
+                    Episode {ep}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           <div className="flex items-center gap-2 text-sm text-slate-400">
-            <span className="sr-only">Comments:</span>
+            <span className="sr-only">Comments</span>
             <span>{countTotalComments(comments)} Comments</span>
           </div>
         </div>
+        <div className="flex self-center  text-sm  text-slate-400">
+          <h2 className="text-lg  font-semibold ">r/series</h2>
+          </div>
         <DropdownMenu >
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="text-slate-400">

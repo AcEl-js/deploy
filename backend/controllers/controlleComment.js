@@ -317,6 +317,27 @@ async function deleteComment(req, res) {
     res.status(500).json({ error: 'Failed to delete comment' });
   }
 }
+async function updatePostIds() {
+  try {
+    // Connect to the database
+
+    // Update all documents
+    const result = await Comment.updateMany(
+      { post_id: { $exists: true } }, // Match documents with a `post_id` field
+      { $set: { post_id: "Episode 1" } } // Set `post_id` to "Episode 1"
+    );
+
+    console.log(`${result.modifiedCount} documents updated successfully.`);
+  } catch (error) {
+    console.error('Error updating post_id:', error);
+  } finally {
+    // Disconnect from the database
+    mongoose.disconnect();
+  }
+}
+
+// Call the function
+updatePostIds();
 module.exports = {
   createComment,
   getComments,

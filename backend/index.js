@@ -31,7 +31,7 @@ const app = express()
 //connect to the database
 
 const corsOptions = {
-  origin: 'https://sync-homie.vercel.app' || 'http://localhost:3000', /* 'https://deploy-4f8o.vercel.app', */ // Replace with your frontend URL
+  origin: ['https://sync-homie.vercel.app', 'http://localhost:3000'], // Array of allowed URLs
   credentials: true, // Allow credentials (cookies) to be sent
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed methods
   allowedHeaders: ['Content-Type', 'Authorization'] // Specify allowed headers

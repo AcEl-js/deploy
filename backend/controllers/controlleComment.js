@@ -7,20 +7,28 @@ const db = mongoose.connection;
 const URL_REGEX = /(\b(www\.|https?:\/\/|git:\/\/|ftp:\/\/|file:\/\/|ssh:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*)?)/gi;
 
 
-
 async function createComment(req, res) {
   try {
-    const {
-      comment_text,
-      post_id,
-      parent_comment_id = null,
-      isSpoiler = false,
+    const { 
+      comment_text, 
+      post_id, 
+      parent_comment_id = null, 
+      isSpoiler = false, 
+      tags = '', // Provide default empty string
     } = req.body;
+    console.log(req.body);
+    
 
     // Validate required fields
     if (!comment_text || !post_id) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
+
+    // Validate tags field - ensure it's a string
+    const tagsString = typeof tags === 'string' ? tags : '';
+    
+    console.log("hello this is tags",tags.join());
+    
 
     // Check for URLs in the comment
     const hasUrls = comment_text.match(URL_REGEX);
@@ -33,31 +41,33 @@ async function createComment(req, res) {
       post_id,
       parent_comment_id,
       isSpoiler,
+      tags: tags.join(), // Use validated tags
       user_profile_picture_url: null,
-      status: commentStatus, // New status field
+      status: commentStatus,
       likes: 0,
       dislikes: 0,
       timestamp: new Date(),
       edited_timestamp: null,
-      // Add a new field to track URL detection
       containsUrls: !!hasUrls
     });
 
     await newComment.save();
 
-    // If comment contains URLs, you might want to log it for review
     if (hasUrls) {
-      console.log(`Comment with URL flagged: ${newComment._id}`);
-      // Optionally, you could add additional logging or notification logic here
+      /* console.log(`Comment with URL flagged: ${newComment._id}`); */
     }
 
-    res.status(201).json({ 
-      message: hasUrls ? 'Comment flagged for review' : 'Comment added successfully', 
-      comment: newComment 
+    res.status(201).json({
+      message: hasUrls ? 'Comment flagged for review' : 'Comment added successfully',
+      comment: newComment
     });
   } catch (error) {
     console.error('Error creating comment:', error);
-    res.status(500).json({ message: 'Error creating comment', error: error.message });
+    console.error('Request body:', req.body); // Add this for debugging
+    res.status(500).json({ 
+      message: 'Error creating comment', 
+      error: error.message 
+    });
   }
 }
 

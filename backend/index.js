@@ -43,7 +43,7 @@ app.use(cors(corsOptions));
 app.use(express.json())
 app.use(cookieParser())
 require('dotenv').config();
-const uri = process.env.MONGODb_CONNECT_URL;
+const uri = "mongodb://localhost:27017/" /* "mongodb+srv://Comment:CommentSysteme@commentsys.usee3.mongodb.net/?retryWrites=true&w=majority&appName=commentsys" *//* process.env.MONGODb_CONNECT_URL */;
 if (!uri) {
   console.error('Error: MONGODb_CONNECT_URL is not defined in .env file.');
   process.exit(1); // Exit the application

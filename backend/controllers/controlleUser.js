@@ -71,13 +71,18 @@ module.exports.login = async (req, res) => {
     try {
         const user = await User.login(email, password);
         const token = createToken(user._id);
+       console.log(token,user);
+       
+        
 
         // In development, ensure secure is set based on the environment
-          res.cookie('jwt', token, {
-             httpOnly: true,
-             sameSite: 'None',
-             secure: process.env.NODE_ENV === 'production',
-             maxAge: maxAge * 1000 });
+        res.cookie('jwt', token, {
+            httpOnly: true,
+            sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: maxAge * 1000
+        });
+
 
         res.status(200).json({ user: user._id, msg: `Welcome you logged in successfully 👋` });
     } catch (err) {

@@ -37,6 +37,11 @@ const CommentSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  tags: { 
+    type: String,
+    default: false, 
+    default: '' 
+  },
   timestamp: {
     type: Date,
     default: Date.now

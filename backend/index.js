@@ -43,7 +43,7 @@ app.use(cors(corsOptions));
 app.use(express.json())
 app.use(cookieParser())
 require('dotenv').config();
-const uri = "mongodb://localhost:27017/" || process.env.MONGODb_CONNECT_URL;
+const uri = process.env.MONGODb_CONNECT_URL;
 if (!uri) {
   console.error('Error: MONGODb_CONNECT_URL is not defined in .env file.');
   process.exit(1); // Exit the application

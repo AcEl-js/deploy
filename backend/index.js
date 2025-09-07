@@ -40,6 +40,7 @@ const corsOptions = {
 
 
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json())
 app.use(cookieParser())
 require('dotenv').config();
@@ -64,7 +65,6 @@ if (!uri) {
   }
 })();
 
-console.log(uri);
 
 
 

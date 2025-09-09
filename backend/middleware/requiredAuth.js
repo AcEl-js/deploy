@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 
 const authorizationUser = async (req, res, next) => {
   const token = req.cookies.jwt;
-  console.log(token)
+
   
   
 
@@ -18,7 +18,7 @@ const authorizationUser = async (req, res, next) => {
     const decodedToken = jwt.verify(token, 'D130PAnutert0611');
     const userId = decodedToken.id;
 
-    console.log(userId);
+    
     
     if (!mongoose.isValidObjectId(userId)) {
       return res.status(400).json({ message: 'Invalid user ID format' });

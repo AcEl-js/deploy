@@ -29,7 +29,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 const connectDB = async () => {
-  const uri = process.env.MONGODB_CONNECT_URL;
+  const uri = "mongodb+srv://Comment:AchrafElhachemy@commentsys.usee3.mongodb.net/?retryWrites=true&w=majority&appName=commentsys";
   console.log(uri);
   
   if (!uri) {
@@ -78,4 +78,5 @@ app.delete('/deleteComment', commentController.deleteComment);
 
 app.listen(8080, () => {
   console.log('you are listening on port 8080');
+
 });
